@@ -2,6 +2,34 @@ import pygame
 import math
 from board import board_array
 
+class Ghost():
+    def __init__(self, screen, image, direction, 
+            x_coord, y_coord, x_scale, y_scale, 
+            lvl_map, is_dead=False, is_blue=False):
+        self.screen = screen
+        self.image = image
+        self.direction = direction
+        self.x_coord = x_coord
+        self.y_coord = y_coord
+        self.x_scale = x_scale
+        self.y_scale = y_scale
+        self.lvl_map = lvl_map
+        self.is_dead = is_dead
+        self.is_blue = is_blue
+        pygame.transform.scale(pygame.image.load(f'assets/ghost_images/powerup.png'), (self.y_scale, self.x_scale))
+
+    def draw_ghost(self):
+        if self.direction == 0:
+            self.screen.blit(self.image, (self.x_coord, self.y_coord))
+        elif self.direction == 1:
+            self.screen.blit(pygame.transform.flip(self.image, True, False), (self.x_coord, self.y_coord))
+        elif self.direction == 2:
+            self.screen.blit(pygame.transform.rotate(self.image, 90), (self.x_coord, self.y_coord))
+        elif self.direction == 3:
+            self.screen.blit(pygame.transform.rotate(self.image, 270), (self.x_coord, self.y_coord))
+
+
+
 pygame.init()
 
 WIDTH = 600
@@ -14,19 +42,52 @@ fps = 60
 font = pygame.font.Font('freesansbold.ttf',20)
 level = board_array
 PI = math.pi
-player_images = []
-for i in range(1,5):
-    player_images.append(pygame.transform.scale(pygame.image.load(f'assets/pacman/{i}.png'),(sprite_y_scale,sprite_x_scale)))
-
-player_x = 300
-player_y = 324
-direction = 0
 counter = 0
 speed = 2
 score = 0
 powerup_count = 0
 powerup = False
-collision = 0
+collision = 0  
+
+#player setup
+player_images = []
+for i in range(1,5):
+    player_images.append(pygame.transform.scale(pygame.image.load(f'assets/pacman/{i}.png'),(sprite_y_scale,sprite_x_scale)))
+player_x = 300
+player_y = 324
+direction = 0
+
+#blue ghost
+blue_img = pygame.transform.scale(pygame.image.load(f'assets/ghost_images/blue.png'), (sprite_y_scale, sprite_x_scale))
+blue_x = 380
+blue_y = 128
+blue_direction = 0
+blue_ghost = Ghost(screen,blue_img,blue_direction,blue_x,blue_y,sprite_x_scale,
+                   sprite_y_scale,level)
+
+#orange ghost
+orange_img = pygame.transform.scale(pygame.image.load(f'assets/ghost_images/orange.png'), (sprite_y_scale, sprite_x_scale))
+orange_x = 60
+orange_y = 160
+orange_direction = 0
+orange_ghost = Ghost(screen,orange_img,orange_direction,orange_x,orange_y,
+                     sprite_x_scale,sprite_y_scale,level)
+
+#pink ghost
+pink_img = pygame.transform.scale(pygame.image.load(f'assets/ghost_images/pink.png'), (sprite_y_scale, sprite_x_scale))
+pink_x = 260
+pink_y = 410
+pink_direction = 0
+pink_ghost = Ghost(screen,pink_img,pink_direction,pink_x,pink_y,sprite_x_scale,
+                   sprite_y_scale,level)
+
+#red ghost
+red_img = pygame.transform.scale(pygame.image.load(f'assets/ghost_images/red.png'), (sprite_y_scale, sprite_x_scale))
+red_x = 140
+red_y = 160
+red_direction = 0
+red_ghost = Ghost(screen,red_img,red_direction,red_x,red_y,sprite_x_scale,
+                  sprite_y_scale,level)
 
 
 def get_coordinates(x_pos,y_pos,x_scale,y_scale):
@@ -41,7 +102,6 @@ def transform_coordinates(x_pos,y_pos,x_scale,y_scale):
     px_coordinate = x_pos // x_scale
     py_coordinate = y_pos // y_scale
     return px_coordinate, py_coordinate
-
 
 def draw_board(lvl,screen,x_scale,y_scale):
     x_scale = (WIDTH // 30)
@@ -172,6 +232,11 @@ while run:
     screen.fill('black')
     draw_board(level,screen,sprite_x_scale,sprite_y_scale)
     draw_player(player_x,player_y,screen)
+    blue_ghost.draw_ghost()
+    orange_ghost.draw_ghost()
+    pink_ghost.draw_ghost()
+    red_ghost.draw_ghost()
+
 
     #check logic
     available_moves , (centerx, centery) = position_check(level,player_x,player_y,sprite_x_scale,sprite_y_scale)
