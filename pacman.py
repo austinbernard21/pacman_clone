@@ -18,6 +18,15 @@ player_images = []
 for i in range(1,5):
     player_images.append(pygame.transform.scale(pygame.image.load(f'assets/pacman/{i}.png'),(sprite_y_scale,sprite_x_scale)))
 
+player_x = 300
+player_y = 324
+direction = 0
+counter = 0
+speed = 2
+score = 0
+powerup_count = 0
+powerup = False
+collision = 0
 
 
 def get_coordinates(x_pos,y_pos,x_scale,y_scale):
@@ -33,17 +42,6 @@ def transform_coordinates(x_pos,y_pos,x_scale,y_scale):
     py_coordinate = y_pos // y_scale
     return px_coordinate, py_coordinate
 
-player_x = 300
-player_y = 324
-
-
-
-print(f'player_x is {player_x}')
-print(f'player_y is {player_y}')
-
-direction = 0
-counter = 0
-speed = 2
 
 def draw_board(lvl,screen,x_scale,y_scale):
     x_scale = (WIDTH // 30)
@@ -139,23 +137,47 @@ def position_check(lvl_map,x_pos,y_pos,x_scale,y_scale):
     # print(f'{(cx,cy),(rx,ry)}')
     return available_moves, (cx,cy)
 
+def check_collisions(lvl_map,centerx,centery,score):
+    collision = 0
+    if lvl_map[centery][centerx] in range(1,3):
+        if lvl_map[centery][centerx] == 2:
+            collision = 1
+            score += 1
+            lvl_map[centery][centerx] = 0
+            return collision, score
+        score += 1
+        lvl_map[centery][centerx] = 0
+        
+    return collision, score
 
 #main loop
 run = True
 while run:
     timer.tick(fps)
+    #for pacman animation
     if counter < 19:
         counter += 1
     else:
         counter = 0
+    
+    #powerup logic
+    if powerup and powerup_count < (fps * 10):
+        powerup_count += 1
+    elif powerup and powerup_count >= (fps * 10):
+        powerup_count = 0
+        powerup = False
 
 
+    #drawing
     screen.fill('black')
     draw_board(level,screen,sprite_x_scale,sprite_y_scale)
     draw_player(player_x,player_y,screen)
-    available_moves , (centerx, centery) = position_check(level,player_x,player_y,sprite_x_scale,sprite_y_scale)
 
-    # print(f'currently at {(centerx,centery)}')
+    #check logic
+    available_moves , (centerx, centery) = position_check(level,player_x,player_y,sprite_x_scale,sprite_y_scale)
+    collision, score = check_collisions(level,centerx,centery,score)
+    if collision == 1:
+        powerup = True
 
     #right
     if direction == 0 and available_moves[0]:
@@ -170,36 +192,18 @@ while run:
     elif direction == 3 and available_moves[3]:
         player_y += 1
     
-    # check_position()
 
+    #key handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
                 direction = 0
-                # print(f'player_x is {player_x}')
-                # print(f'player_y is {player_y}')
-                # print(f'x_coord is {px_coordinate}')
-                # print(f'y_coord is {py_coordinate}')
-                # print(f'element to the right {level[py_coordinate][px_coordinate+1]}')
-                # print(f'current position is {(py_coordinate, px_coordinate)}')
             if event.key == pygame.K_LEFT:
                 direction = 1
-                # print(f'player_x is {player_x}')
-                # print(f'player_y is {player_y}')
-                # print(f'x_coord is {px_coordinate}')
-                # print(f'y_coord is {py_coordinate}')
-                # print(f'element to the left {level[py_coordinate][px_coordinate-1]}')
-                # print(f'current position is {(py_coordinate, px_coordinate)}')
             if event.key == pygame.K_UP:
                 direction = 2
-                # print(f'player_x is {player_x}')
-                # print(f'player_y is {player_y}')
-                # print(f'x_coord is {px_coordinate}')
-                # print(f'y_coord is {py_coordinate}')
-                # print(f'element to the top {level[py_coordinate - 1][px_coordinate]}')
-                # print(f'current position is {(py_coordinate, px_coordinate)}')
             if event.key == pygame.K_DOWN:
                 direction = 3
                 # print(f'player_x is {player_x}')
