@@ -19,26 +19,28 @@ for i in range(1,5):
     player_images.append(pygame.transform.scale(pygame.image.load(f'assets/pacman/{i}.png'),(sprite_y_scale,sprite_x_scale)))
 
 
+
 def get_coordinates(x_pos,y_pos,x_scale,y_scale):
+    center = (x_pos + x_scale // 2, y_pos + y_scale // 2 + 1)
+    center_right = (x_pos + x_scale, y_pos + y_scale //2)
+    center_left = (x_pos, y_pos + y_scale // 2)
+    center_top = (x_pos + x_scale // 2, y_pos)
+    center_bottom = (x_pos + x_scale // 2, y_pos + y_scale)
+    return center, center_left, center_right, center_top, center_bottom
+
+def transform_coordinates(x_pos,y_pos,x_scale,y_scale):
     px_coordinate = x_pos // x_scale
     py_coordinate = y_pos // y_scale
     return px_coordinate, py_coordinate
 
-
 player_x = 300
 player_y = 324
-centerx = player_x + sprite_x_scale // 2
-centery = player_y + sprite_y_scale // 2 + 1
-px_coordinate, py_coordinate = get_coordinates(centerx,centery,
-                                               sprite_x_scale,sprite_y_scale)
-# px_coordinate = player_x // sprite_x_scale
-# py_coordinate = player_y // sprite_y_scale
-# player_x, player_y = (px_coordinate * sprite_x_scale ,
-#                        py_coordinate * sprite_y_scale)
+
+
+
 print(f'player_x is {player_x}')
 print(f'player_y is {player_y}')
-print(f'x_coord is {px_coordinate}')
-print(f'y_coord is {py_coordinate}')
+
 direction = 0
 counter = 0
 speed = 2
@@ -108,25 +110,35 @@ def draw_player(player_x, player_y,screen):
         pygame.draw.circle(screen,'white',(player_x + sprite_x_scale, player_y),2)
         pygame.draw.circle(screen,'white',(player_x + sprite_x_scale, player_y + sprite_y_scale),2)
 
-
-def get_available_moves(lvl_map,px_coord,py_coord):
-    #right, left, up, down
+def position_check(lvl_map,x_pos,y_pos,x_scale,y_scale):
+    center, center_left, center_right, center_top, center_bottom = get_coordinates(x_pos,
+                                                                             y_pos,
+                                                                             x_scale,
+                                                                             y_scale)
     available_moves = [False,False,False,False]
     spaces = [0,1,2]
+    cx, cy = transform_coordinates(center[0],center[1],x_scale,y_scale)
+    lx, ly = transform_coordinates(center_left[0],center_left[1],x_scale,y_scale)
+    rx, ry = transform_coordinates(center_right[0], center_right[1],x_scale,y_scale)
+    tx, ty = transform_coordinates(center_top[0], center_top[1],x_scale,y_scale)
+    bx, by = transform_coordinates(center_bottom[0], center_bottom[1],x_scale,y_scale)
+
     #right
-    if lvl_map[py_coord][px_coord + 1] in spaces:
+    if lvl_map[ry][rx] in spaces:
         available_moves[0] = True
     #left
-    if lvl_map[py_coord][px_coord - 1] in spaces:
+    if lvl_map[ly][lx] in spaces:
         available_moves[1] = True
     #up
-    if lvl_map[py_coord - 1][px_coord] in spaces:
+    if lvl_map[ty][tx] in spaces:
         available_moves[2] = True
     #down
-    if lvl_map[py_coord + 1][px_coord] in spaces:
+    if lvl_map[by][bx] in spaces:
         available_moves[3] = True
 
-    return available_moves
+    # print(f'{(cx,cy),(rx,ry)}')
+    return available_moves, (cx,cy)
+
 
 #main loop
 run = True
@@ -141,12 +153,9 @@ while run:
     screen.fill('black')
     draw_board(level,screen,sprite_x_scale,sprite_y_scale)
     draw_player(player_x,player_y,screen)
-    centerx = player_x + sprite_x_scale // 2
-    centery = player_y + sprite_y_scale // 2
-    px_coordinate, py_coordinate = get_coordinates(centerx,centery,
-                                               sprite_x_scale,sprite_y_scale)
-    #r,l,u,d
-    available_moves = get_available_moves(level,px_coordinate,py_coordinate)
+    available_moves , (centerx, centery) = position_check(level,player_x,player_y,sprite_x_scale,sprite_y_scale)
+
+    # print(f'currently at {(centerx,centery)}')
 
     #right
     if direction == 0 and available_moves[0]:
@@ -169,36 +178,36 @@ while run:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
                 direction = 0
-                print(f'player_x is {player_x}')
-                print(f'player_y is {player_y}')
-                print(f'x_coord is {px_coordinate}')
-                print(f'y_coord is {py_coordinate}')
-                print(f'element to the right {level[py_coordinate][px_coordinate+1]}')
-                print(f'current position is {(py_coordinate, px_coordinate)}')
+                # print(f'player_x is {player_x}')
+                # print(f'player_y is {player_y}')
+                # print(f'x_coord is {px_coordinate}')
+                # print(f'y_coord is {py_coordinate}')
+                # print(f'element to the right {level[py_coordinate][px_coordinate+1]}')
+                # print(f'current position is {(py_coordinate, px_coordinate)}')
             if event.key == pygame.K_LEFT:
                 direction = 1
-                print(f'player_x is {player_x}')
-                print(f'player_y is {player_y}')
-                print(f'x_coord is {px_coordinate}')
-                print(f'y_coord is {py_coordinate}')
-                print(f'element to the left {level[py_coordinate][px_coordinate-1]}')
-                print(f'current position is {(py_coordinate, px_coordinate)}')
+                # print(f'player_x is {player_x}')
+                # print(f'player_y is {player_y}')
+                # print(f'x_coord is {px_coordinate}')
+                # print(f'y_coord is {py_coordinate}')
+                # print(f'element to the left {level[py_coordinate][px_coordinate-1]}')
+                # print(f'current position is {(py_coordinate, px_coordinate)}')
             if event.key == pygame.K_UP:
                 direction = 2
-                print(f'player_x is {player_x}')
-                print(f'player_y is {player_y}')
-                print(f'x_coord is {px_coordinate}')
-                print(f'y_coord is {py_coordinate}')
-                print(f'element to the top {level[py_coordinate - 1][px_coordinate]}')
-                print(f'current position is {(py_coordinate, px_coordinate)}')
+                # print(f'player_x is {player_x}')
+                # print(f'player_y is {player_y}')
+                # print(f'x_coord is {px_coordinate}')
+                # print(f'y_coord is {py_coordinate}')
+                # print(f'element to the top {level[py_coordinate - 1][px_coordinate]}')
+                # print(f'current position is {(py_coordinate, px_coordinate)}')
             if event.key == pygame.K_DOWN:
                 direction = 3
-                print(f'player_x is {player_x}')
-                print(f'player_y is {player_y}')
-                print(f'x_coord is {px_coordinate}')
-                print(f'y_coord is {py_coordinate}')
-                print(f'element to the left {level[py_coordinate + 1][px_coordinate]}')
-                print(f'current position is {(py_coordinate, px_coordinate)}')
+                # print(f'player_x is {player_x}')
+                # print(f'player_y is {player_y}')
+                # print(f'x_coord is {px_coordinate}')
+                # print(f'y_coord is {py_coordinate}')
+                # print(f'element to the left {level[py_coordinate + 1][px_coordinate]}')
+                # print(f'current position is {(py_coordinate, px_coordinate)}')
 
     
     pygame.display.flip()
