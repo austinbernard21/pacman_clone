@@ -108,7 +108,7 @@ class Player(Character):
 class Ghost(Character):
     def __init__(self, screen, image, direction, 
             x_coord, y_coord, x_scale, y_scale, 
-            lvl_map, is_dead=False, is_blue=False,
+            lvl_map, is_blue=False,
             movement_counter = 0):
         self.screen = screen
         self.image = image
@@ -118,10 +118,11 @@ class Ghost(Character):
         self.x_scale = x_scale
         self.y_scale = y_scale
         self.lvl_map = lvl_map
-        self.is_dead = is_dead
         self.is_blue = is_blue
         self.blue_img = pygame.transform.scale(pygame.image.load(f'assets/ghost_images/powerup.png'), (self.y_scale, self.x_scale))
         self.movement_counter = movement_counter
+        self.original_x = x_coord
+        self.original_y = y_coord
 
     def check_collisions(self,centerx,centery,other_x,other_y):
         collision = 0
@@ -134,9 +135,6 @@ class Ghost(Character):
     
     def set_blue(self,is_blue):
         self.is_blue = is_blue
-
-    def set_dead(self,is_dead):
-        self.is_dead = is_dead
 
     def movement_count_plus(self):
         self.movement_counter += 1
@@ -191,6 +189,20 @@ def draw_board(lvl,screen,x_scale,y_scale):
                 pygame.draw.line(screen, 'white', (j * x_scale, i * y_scale + (0.5 * y_scale)),
                                  (j * x_scale + x_scale, i * y_scale + (0.5 * y_scale)), 3)
 
+def display_texts(score,lives,screen,won=False,lose=False):
+    score_text = font.render(f'Score: {score}', True, 'white')
+    screen.blit(score_text,(10,620))
+    lives_text = font.render(f'Lives: {lives}', True, 'white')
+    screen.blit(lives_text,(510,620))
+
+    if won:
+        win_text = font.render('You Won!', True, 'red')
+        screen.blit(win_text,(270,310))
+    if lose:
+        lose_text = font.render('You Lost!', True, 'red')
+        screen.blit(lose_text,(270,310))
+
+
 pygame.init()
 
 WIDTH = 600
@@ -203,12 +215,23 @@ timer = pygame.time.Clock()
 fps = 60
 font = pygame.font.Font('freesansbold.ttf',20)
 level = board_array
+total_points = 0
+for i in range(len(level)):
+    for j in range(len(level[i])):
+        if level[i][j] == 1 or level[i][j] == 2:
+            total_points += 1
 counter = 0
 speed = 2
 score = 0
+lives = 3
+won = False
+lose = False
 powerup_count = 0
 powerup = False
 collision = 0  
+
+original_x = 300
+original_y = 324
 
 #player setup
 player_images = []
@@ -268,6 +291,15 @@ while run:
     else:
         counter = 0
 
+    #win condition
+    if score == total_points:
+        won = True
+        print('won')
+
+    #lose condition
+    if lives == 0:
+        lose = True
+        print('lose')
 
     #powerup logic
     if powerup and powerup_count < (fps * 10):
@@ -281,6 +313,7 @@ while run:
     #drawing
     screen.fill('black')
     draw_board(level,screen,sprite_x_scale,sprite_y_scale)
+    display_texts(score,lives,screen,won,lose)
     pacman.draw(counter)
     blue_ghost.draw()
     orange_ghost.draw()
@@ -298,16 +331,16 @@ while run:
     #player movement
     #right
     if pacman.direction == 0 and available_moves[0]:
-        pacman.x_coord += 1
+        pacman.x_coord += 1 * speed
     #left
     elif pacman.direction == 1 and available_moves[1]:
-        pacman.x_coord -= 1
+        pacman.x_coord -= 1 * speed
     #up
     elif pacman.direction == 2 and available_moves[2]:
-        pacman.y_coord -= 1
+        pacman.y_coord -= 1 * speed
     #down
     elif pacman.direction == 3 and available_moves[3]:
-        pacman.y_coord += 1
+        pacman.y_coord += 1 * speed
 
     #ghost logic
     for ghost in ghosts:
@@ -330,34 +363,38 @@ while run:
         ghost_moves_available , (ghost_x, ghost_y) = ghost.position_check()
         capture = ghost.check_collisions(centerx,centery,ghost_x,ghost_y)
         if capture == 1 and not powerup:
-            print('captured')
+            # print('captured')
+            lives -= 1
+            pacman.x_coord = original_x
+            pacman.y_coord = original_y
         if capture == 1 and powerup:
-            ghost.is_dead = True
-            print('im dead')
+            ghost.x_coord = ghost.original_x
+            ghost.y_coord = ghost.original_y
+            # print('im dead')
 
         #ghost movement
         #right
         if ghost.direction == 0:
             if ghost_moves_available[0]:
-                ghost.x_coord += 1
+                ghost.x_coord += 1 * speed
             else:
                 ghost.direction = random.choice([x for x in range(4)])
         #left
         if ghost.direction == 1:
             if ghost_moves_available[1]:
-                ghost.x_coord -= 1
+                ghost.x_coord -= 1 * speed
             else:
                 ghost.direction = random.choice([x for x in range(4)])
         #up
         if ghost.direction == 2:
             if ghost_moves_available[2]:
-                ghost.y_coord -= 1
+                ghost.y_coord -= 1 * speed
             else:
                 ghost.direction = random.choice([x for x in range(4)])
         #down
         if ghost.direction == 3:
             if ghost_moves_available[3]:
-                ghost.y_coord += 1
+                ghost.y_coord += 1 * speed
             else:
                 ghost.direction = random.choice([x for x in range(4)])
         
